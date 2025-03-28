@@ -1,0 +1,52 @@
+name: Daily Balance NOX Pay
+
+on:
+  schedule:
+    # Executa a cada 6 minutos
+    - cron: '0,6,12,18,24,30,36,42,48,54 * * * *'
+  workflow_dispatch:        # Mantém a execução manual
+
+# Adiciona controle de concorrência
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+
+jobs:
+  run-balance-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pygsheets pandas paramiko pytz
+
+      - name: Setup Google Credentials
+        run: |
+          echo '${{ secrets.GOOGLE_CREDENTIALS }}' > controles.json
+
+      - name: Run balance check
+        run: |
+          set -x  # Mostra os comandos sendo executados
+          echo "=== Iniciando execução em $(date) ==="
+          python -u daily_balance_noxpay.py  # Flag -u força output sem buffer
+          echo "=== Finalizado em $(date) ==="
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+          CONTAS_GRANDES: ${{ secrets.CONTAS_GRANDES }}
+          url_financial: ${{ secrets.url_financial }}
