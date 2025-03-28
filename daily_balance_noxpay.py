@@ -19,7 +19,13 @@ url_financial = os.getenv('url_financial')
 try:
     CONTAS_GRANDES = json.loads(os.getenv('CONTAS_GRANDES', '{}'))
 except json.JSONDecodeError:
-    CONTAS_GRANDES = {}
+    print("Erro ao decodificar CONTAS_GRANDES. Usando configuração padrão.")
+    CONTAS_GRANDES = {
+        "15277CDE747846BB84C2DFCE85DB504B": {"timeout": 300, "retries": 5, "batch_size": 50},
+        "44B0F69654774D829A00413476711E1C": {"timeout": 300, "retries": 5, "batch_size": 50},
+        "AB3FF5EA035C48A5864F9B0C6DCC2CC4": {"timeout": 300, "retries": 5, "batch_size": 50},
+        "EA67B2F52FC342AB8D91E3293229FE0B": {"timeout": 300, "retries": 5, "batch_size": 50}
+    }
 
 class RateLimiter:
     def __init__(self, max_requests=900, time_window=60):
@@ -258,8 +264,8 @@ def check_all_accounts():
         resultados = []
         
         # Separa contas grandes das normais
-        contas_grandes = df_subcontas_ativas[df_subcontas_ativas["account"].isin(CONTAS_GRANDES.keys())]
-        contas_normais = df_subcontas_ativas[~df_subcontas_ativas["account"].isin(CONTAS_GRANDES.keys())]
+        contas_grandes = df_subcontas_ativas[df_subcontas_ativas["account"].isin(CONTAS_GRANDES)]
+        contas_normais = df_subcontas_ativas[~df_subcontas_ativas["account"].isin(CONTAS_GRANDES)]
         
         # Processa primeiro as contas grandes
         print("\nProcessando contas com muitas transações...")
